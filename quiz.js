@@ -120,24 +120,31 @@ Quiz.prototype.submitAnswer = function() {
         this.buttonVisibility();
         return;
     }
+    this._data.forEach((choice, i) => {
+        if (i === this._questionNumber - 1) {
+            choice.choice = this._currentAnswer;
+        }
+    })
     var percent = this._questionNumber/(this._data.length);
     this.changeProgressBar(percent);
     //remove quiz
     this.removeQuiz();
     //ask for email
-    var hiddenAsk = document.getElementById("emailAsk");
-    hiddenAsk.style.display = "flex"
+    var hiddenAsk = $('#emailAsk');
+    hiddenAsk.show();
+    // var hiddenAsk = document.getElementById("emailAsk");
+    // hiddenAsk.style.display = "flex"
 }
 
 
 Quiz.prototype.removeQuiz = function() {
     //use jquery instead
-    // $('#leftContainer').empty();
-    // $('#rightContainer').empty();
-    var leftSide = document.getElementById("leftContainer");
-    var rightSide = document.getElementById("rightContainer");
-    leftSide.parentNode.removeChild(leftSide);
-    rightSide.parentNode.removeChild(rightSide);
+    $('#leftContainer').hide();
+    $('#rightContainer').hide();
+    // var leftSide = document.getElementById("leftContainer");
+    // var rightSide = document.getElementById("rightContainer");
+    // leftSide.parentNode.removeChild(leftSide);
+    // rightSide.parentNode.removeChild(rightSide);
 }
 
 Quiz.prototype.selectAnswer = function(answer) {
@@ -162,14 +169,21 @@ Quiz.prototype.toggleSelectedAnswerBack = function() {
     toggleBackEl.setAttribute("class", "answerChoice")
 }
 
-Quiz.prototype.goBack =function() {
+Quiz.prototype.goBack =function(number) {
     var alert = $('#no-answer-alert');
     alert.hide();
-    this._questionNumber -= 1;
+    if (number) {
+        console.log('does it work');
+    } else {
+        this._questionNumber -= 1;
+    }
+    
     //set current answer
     this.toggleSelectedAnswerBack();
-    this._currentAnswer = this._data[questionNumber - 1].choice;
-    this.selectAnswer(currentAnswer);
+    console.log(this._currentAnswer, this._data, this._questionNumber)
+    // console.log(this._data[this._questionNumber - 1])
+    this._currentAnswer = this._data[this._questionNumber - 1].choice;
+    this.selectAnswer(this._currentAnswer);
     this.addTextToQuestion();
     this.addTextToAnswerChoices();
     this.buttonVisibility();
@@ -183,7 +197,7 @@ Quiz.prototype.goForward =function() {
     this.toggleSelectedAnswerBack();
 
     this._currentAnswer = this._data[this._questionNumber - 1].choice;
-    this.selectAnswer(currentAnswer);
+    this.selectAnswer(this._currentAnswer);
 
     this.addTextToQuestion();
     this.addTextToAnswerChoices();
@@ -254,25 +268,33 @@ Quiz.prototype.validateEmail = function(email) {
     return re.test(String(email).toLowerCase());
 }
 
+Quiz.prototype.startReviewMode = function() {
+    //put the left and right containers back.
+    $('#emailAsk').hide();
+    //hide the submit button
+    $('#submit-button').hide();
+    $('#leftContainer').show();
+    $('#rightContainer').show();
+    //remove click handlers for the answer choices
+    $('.choiceWrapper').off('click');
+    $('.choiceWrapper').css('cursor', 'auto');
+    //change the pointer so it's gone
+    this.toggleSelectedAnswerBack();
+    this._questionNumber = 1;
+    this._quizStarted = true;
+    this._currentAnswer = this._data[this._questionNumber - 1].choice;
+ 
+    this.goBack(1);
+}
 
 Quiz.prototype.init = function() {
     var that = this;
-    $('#Aselect').click(function() {
-        that.selectAnswer('A')
+    $('#bad-email-alert').hide();
+    $('#emailAsk').hide();
+    $('.choiceWrapper').click(function() {
+        var answer = $(this).children()[0].innerText;
+        that.selectAnswer(answer)
     });
-    
-    $('#Bselect').click(function() {
-        that.selectAnswer('B')
-    });
-    
-    $('#Cselect').click(function() {
-        that.selectAnswer('C')
-    });
-    
-    $('#Dselect').click(function() {
-        that.selectAnswer('D')
-    });
-    
     $('#back').click(function() {
         that.goBack();
     });
@@ -287,18 +309,36 @@ Quiz.prototype.init = function() {
     
     //collect email
     $('#email-submit').click(function() {
+        $('#bad-email-alert').hide();
+
         var email = $('#email').val();
-        var emailIsValid = validateEmail(email);
+        var emailIsValid = that.validateEmail(email);
         if (emailIsValid) {
             that._reviewMode = true;
-            //remove email stuff
-            //calculate and show score
+            // that.startReviewMode();
+
+            //instead of starting review mode, lets tally their score, and then display it
+            var answersCorrect = that._data.filter((answer, i) => {
+                return answer.choice === answer.correct;
+            }).length;
+            $('.email-collect').hide();
+            var scoreEl = $('#score');
+            scoreEl.text('You got ' + answersCorrect + ' out of ' + that._data.length);
+            var reviewButton = '<div class="col-md-12 mt-3 text-center"><button id="review-button" type="button" role="button" class="btn btn-outline-primary">Review Your Answers</button></div>';
+            scoreEl.append(reviewButton);
+            //now, review answers, so add a click handler to the above button
+            $('#review-button').click(function() {
+                that.startReviewMode();
+            })
             //ask to share on facebook
         } else {
             //create a pop up that says "please enter a valid email"
+            $('#bad-email-alert').show();
+
             console.log('please enter a valid email');
         }
     })
+
     if (this._questionNumber === 1) {
         //add a div and add text before the progress bar
         // var progressText = document.getElementById('progress-text');
