@@ -6,7 +6,6 @@ function Quiz(quizObj) {
     this._reviewMode = false;
 }
 
-
 Quiz.prototype.addTextToRightSide = function() {
     //i probably have to use jQuery, or use a javascript equivalent 
     if (this._data[this._questionNumber-1].text) {
@@ -18,12 +17,10 @@ Quiz.prototype.addTextToRightSide = function() {
 }
 
 
-
 Quiz.prototype.removeTextFromRightSide = function() {
     //change to jQuery'
     $('#rightContainer').empty();
 }
-
 
 Quiz.prototype.addTextToAnswerChoices = function() {
     //the function below seems to not be working, because it adds the text for one question, and then it remains even
@@ -136,15 +133,11 @@ Quiz.prototype.submitAnswer = function() {
     // hiddenAsk.style.display = "flex"
 }
 
-
 Quiz.prototype.removeQuiz = function() {
     //use jquery instead
     $('#leftContainer').hide();
     $('#rightContainer').hide();
     // var leftSide = document.getElementById("leftContainer");
-    // var rightSide = document.getElementById("rightContainer");
-    // leftSide.parentNode.removeChild(leftSide);
-    // rightSide.parentNode.removeChild(rightSide);
 }
 
 Quiz.prototype.selectAnswer = function(answer) {
